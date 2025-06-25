@@ -18,5 +18,13 @@ def check_winner(board):
     for a,b,c in wins:
         if board[a] and board[a]==board[b]==board[c]:
             return board[a]
-        else:
+        
+    if all(cell != "" for cell in board):
+        return "Draw"
             
+    return None
+
+def reset_game():
+    st.session_state.board=[" for _ in range"]
+    st.session_state.player="X"
+    st.session_state.winner=None
