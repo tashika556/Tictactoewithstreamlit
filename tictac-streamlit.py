@@ -8,7 +8,7 @@ st.sidebar.success("Hy Everyone , This is my first project with Streamlit . Plea
 
 if "board" not in st.session_state:
     st.session_state.board=["" for _ in range(9)]
-    st.session_state.player="X"
+    st.session_state.current_player="X"
     st.session_state.winner=None
 
 def check_winner(board):
@@ -26,12 +26,12 @@ def check_winner(board):
 
 def reset_game():
     st.session_state.board=["" for _ in range(9)]
-    st.session_state.player="X"
+    st.session_state.current_player="X"
     st.session_state.winner=None
 
 def max_min(board,is_maximum):
     winner=check_winner(board)
-    if winner=="0":
+    if winner=="O":
         return 1
     if winner == "X":
         return -1
@@ -54,14 +54,50 @@ def max_min(board,is_maximum):
                 board[i]="X"
                 score= max_min(board,True)
                 board[i]=""
-                best_score=max(score,best_score)
+                best_score=min(score,best_score)
         return best_score
- 
-if st.session_state.winner():
+    
+
+def ai_move():
+    best_score=-float("inf")
+    move = None
+    for i in range(9):
+            if st.session_state.board[i]=="":
+                st.session_state.board[i]="O"
+                score= max_min(st.session_state.board,False)
+                st.session_state.board[i]=""
+                if score > best_score:
+                    best_score = score
+                    move = i
+    if move is not None:
+           st.session_state.board[move]="O"         
+
+def draw_board():
+    for i in range(3):
+        cols=st.columns(3)
+        for j in range(3):
+            idx = 3 * i + j
+            if st.session_state.board[idx]=="":
+                if cols[j].button(" ", key=idx):
+                    if st.session_state.winner is None and st.session_state.current_player == "X":
+                        st.session_state.board[idx] = "X"
+                        st.session_state.winner = check_winner(st.session_state.board)
+                        if st.session_state.winner is None:
+                            ai_move()
+                            st.session_state.winner = check_winner(st.session_state.board)
+            else:
+                cols[j].button(st.session_state.board[idx], key=idx, disabled=True)
+
+draw_board()       
+
+
+
+if st.session_state.winner:
     if st.session_state.winner == "Draw" :
-        st.succes("It's a draw 🤝 ")
+        st.success("It's a draw 🤝 ")
     else:
         st.success(f"Player {st.session_state.winner} wins🏆")    
-    st.button("Play again", onclick=reset_game())
-else:
-    st.info("Your Turn (X). You'll go first.")   
+    st.button("Play again", on_click=reset_game)
+elif st.session_state.current_player == "X" and st.session_state.winner is None:
+    st.info("Your Turn (X). You'll go first.")
+
